@@ -6,8 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useTrafficStore } from "@/lib/stores/traffic-store"
-import { Car, Clock, Activity, AlertTriangle, MapPin } from "lucide-react"
-import { TrafficMetricsCard } from "./traffic-metrics-card"
 import type { Intersection } from "@/lib/types"
 
 export function IntersectionCard({ intersection }: { intersection: Intersection }) {

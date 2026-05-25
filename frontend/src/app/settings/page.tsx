@@ -1,108 +1,150 @@
 "use client"
 
-import Link from "next/link"
 import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { Bell, Shield, Globe } from "lucide-react"
+import { Bell, Shield, Globe, Moon, Sun, Monitor } from "lucide-react"
+import { MainLayout } from "@/components/layout/main-layout"
 
 export default function SettingsPage() {
   const { resolvedTheme, setTheme } = useTheme()
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="border-b">
-        <div className="flex h-16 items-center px-4">
-          <h1 className="text-lg font-semibold">Smart Traffic System</h1>
-          <nav className="ml-auto flex items-center space-x-4">
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/">Dashboard</Link>
-            </Button>
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/intersections">Intersections</Link>
-            </Button>
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/analytics">Analytics</Link>
-            </Button>
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/predictions">Predictions</Link>
-            </Button>
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/settings">Settings</Link>
-            </Button>
-          </nav>
-        </div>
-      </header>
+    <MainLayout title="Settings" description="Configure system preferences">
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Bell className="h-5 w-5" />
+              Notifications
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="alerts" className="text-base">
+                  Traffic Alerts
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Receive notifications about traffic conditions
+                </p>
+              </div>
+              <Switch id="alerts" defaultChecked />
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="emergency" className="text-base">
+                  Emergency Vehicle Tracking
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Get alerts for approaching emergency vehicles
+                </p>
+              </div>
+              <Switch id="emergency" defaultChecked />
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="maintenance" className="text-base">
+                  Maintenance Reminders
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Schedule and track maintenance tasks
+                </p>
+              </div>
+              <Switch id="maintenance" />
+            </div>
+          </CardContent>
+        </Card>
 
-      <main className="flex-1 p-4 md:p-8">
-        <div className="mx-auto max-w-4xl">
-          <div className="mb-8">
-            <h2 className="text-3xl font-bold tracking-tight">Settings</h2>
-            <p className="text-muted-foreground">Configure system preferences</p>
-          </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              Privacy & Security
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="data-collection" className="text-base">
+                  Data Collection
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Allow anonymized traffic data collection
+                </p>
+              </div>
+              <Switch id="data-collection" />
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="two-factor" className="text-base">
+                  Two-Factor Authentication
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Add extra security to your account
+                </p>
+              </div>
+              <Switch id="two-factor" />
+            </div>
+          </CardContent>
+        </Card>
 
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Bell className="h-5 w-5" />
-                  Notifications
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="alerts">Traffic Alerts</Label>
-                  <Switch id="alerts" defaultChecked />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="emergency">Emergency Vehicle Tracking</Label>
-                  <Switch id="emergency" defaultChecked />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5" />
-                  Privacy & Security
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="data-collection">Data Collection</Label>
-                  <Switch id="data-collection" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Globe className="h-5 w-5" />
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Globe className="h-5 w-5" />
+              System
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-base">Theme</Label>
+              <div className="flex gap-2">
+                <Button
+                  variant={resolvedTheme === "light" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setTheme("light")}
+                  className="flex-1"
+                >
+                  <Sun className="mr-2 h-4 w-4" />
+                  Light
+                </Button>
+                <Button
+                  variant={resolvedTheme === "dark" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setTheme("dark")}
+                  className="flex-1"
+                >
+                  <Moon className="mr-2 h-4 w-4" />
+                  Dark
+                </Button>
+                <Button
+                  variant={resolvedTheme === "system" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setTheme("system")}
+                  className="flex-1"
+                >
+                  <Monitor className="mr-2 h-4 w-4" />
                   System
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="dark-mode">Dark Mode</Label>
-                  <Switch
-                    id="dark-mode"
-                    checked={resolvedTheme === "dark"}
-                    onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="refresh">Auto Refresh</Label>
-                  <Switch id="refresh" defaultChecked />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </main>
-    </div>
+                </Button>
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="refresh" className="text-base">
+                  Auto Refresh
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Automatically refresh traffic data
+                </p>
+              </div>
+              <Switch id="refresh" defaultChecked />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </MainLayout>
   )
 }
