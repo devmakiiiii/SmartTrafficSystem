@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Car, Gauge, Activity, Clock, TrendingUp } from "lucide-react"
 import { useTrafficStore } from "@/lib/stores/traffic-store"
+import { type Intersection, type TrafficData } from "@/lib/stores/traffic-store"
 import { MainLayout } from "@/components/layout/main-layout"
 import { cn } from "@/lib/utils"
 import {
@@ -16,14 +17,19 @@ import {
   AreaChart,
   Area,
 } from "recharts"
+import { useTrafficSocket } from "@/api/useTrafficSocket"
 
 export default function DashboardPage() {
-  const { trafficMetrics, trafficHistory, intersections } = useTrafficStore()
+  // useTrafficSocket already syncs all data into the store internally —
+  // we only need isConnected here for the UI indicator.
+  const { isConnected } = useTrafficSocket()
 
-  const chartData = trafficHistory.slice(-20).map((item) => ({
-    time: new Date(item.timestamp).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
-    vehicles: item.vehicleCount,
-    speed: item.averageSpeed,
+  const { intersections, trafficMetrics, trafficHistory } = useTrafficStore()
+
+  // Build chart data from history (last 20 snapshots)
+  const chartData = trafficHistory.slice(-20).map((d: TrafficData) => ({
+    time: new Date(d.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    vehicles: d.totalVehicles,
   }))
 
   const getCongestionColor = (level: number) => {
@@ -33,13 +39,26 @@ export default function DashboardPage() {
   }
 
   const getCongestionBg = (level: number) => {
-    if (level < 0.3) return "bg-green-500/10"
-    if (level < 0.6) return "bg-yellow-500/10"
-    return "bg-red-500/10"
+    if (level < 0.3) return "bg-green-500"
+    if (level < 0.6) return "bg-yellow-500"
+    return "bg-red-500"
   }
 
   return (
     <MainLayout title="Traffic Dashboard" description="Real-time traffic monitoring and control">
+      {/* Connection indicator */}
+      <div className="mb-4 flex items-center gap-2 text-sm">
+        <span
+          className={cn(
+            "inline-block h-2 w-2 rounded-full",
+            isConnected ? "bg-green-500 animate-pulse" : "bg-red-500"
+          )}
+        />
+        <span className="text-muted-foreground">
+          {isConnected ? "Live — connected to backend" : "Disconnected — reconnecting…"}
+        </span>
+      </div>
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -47,10 +66,10 @@ export default function DashboardPage() {
             <Car className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{trafficMetrics.totalVehicles.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">
-              <span className="text-green-500">+12%</span> from last hour
-            </p>
+            <div className="text-2xl font-bold">
+              {trafficMetrics.totalVehicles.toLocaleString()}
+            </div>
+            <p className="text-xs text-muted-foreground">Across all intersections</p>
           </CardContent>
         </Card>
 
@@ -60,8 +79,8 @@ export default function DashboardPage() {
             <Gauge className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{trafficMetrics.averageSpeed} mph</div>
-            <p className="text-xs text-muted-foreground">Normal range (20-30 mph)</p>
+            <div className="text-2xl font-bold">{trafficMetrics.averageSpeed} km/h</div>
+            <p className="text-xs text-muted-foreground">Normal range (20–60 km/h)</p>
           </CardContent>
         </Card>
 
@@ -106,7 +125,7 @@ export default function DashboardPage() {
           <CardContent>
             <div className="h-[300px]">
               {chartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%" minWidth={200} minHeight={200} aspect={undefined}>
+                <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                     <XAxis dataKey="time" className="text-xs" />
@@ -130,7 +149,9 @@ export default function DashboardPage() {
                 </ResponsiveContainer>
               ) : (
                 <div className="flex h-full items-center justify-center">
-                  <p className="text-muted-foreground">No traffic data yet</p>
+                  <p className="text-muted-foreground">
+                    {isConnected ? "Waiting for data…" : "No traffic data yet"}
+                  </p>
                 </div>
               )}
             </div>
@@ -146,7 +167,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {intersections.slice(0, 4).map((intersection) => (
+              {intersections.slice(0, 4).map((intersection: Intersection) => (
                 <Link
                   key={intersection.id}
                   href={`/intersections/${intersection.id}`}
@@ -155,7 +176,8 @@ export default function DashboardPage() {
                   <div className="flex-1">
                     <p className="font-medium">{intersection.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {intersection.vehicleCount} vehicles • {Math.round(intersection.density * 100)}% density
+                      {intersection.vehicleCount} vehicles •{" "}
+                      {Math.round(intersection.density * 100)}% density
                     </p>
                   </div>
                   <div className="ml-2 flex items-center gap-2">
@@ -176,7 +198,10 @@ export default function DashboardPage() {
                 </Link>
               ))}
               {intersections.length > 4 && (
-                <Link href="/intersections" className="block text-center text-sm text-primary hover:underline">
+                <Link
+                  href="/intersections"
+                  className="block text-center text-sm text-primary hover:underline"
+                >
                   View all {intersections.length} intersections
                 </Link>
               )}

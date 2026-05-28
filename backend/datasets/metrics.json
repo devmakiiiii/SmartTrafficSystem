@@ -1,0 +1,129 @@
+{
+  "best_model": "RandomForest",
+  "best_accuracy": 0.997,
+  "models": {
+    "RandomForest": {
+      "accuracy": 0.997,
+      "report": {
+        "0": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 783.0
+        },
+        "1": {
+          "precision": 0.9802631578947368,
+          "recall": 1.0,
+          "f1-score": 0.9900332225913622,
+          "support": 149.0
+        },
+        "2": {
+          "precision": 1.0,
+          "recall": 0.9558823529411765,
+          "f1-score": 0.9774436090225563,
+          "support": 68.0
+        },
+        "accuracy": 0.997,
+        "macro avg": {
+          "precision": 0.9934210526315789,
+          "recall": 0.9852941176470589,
+          "f1-score": 0.9891589438713062,
+          "support": 1000.0
+        },
+        "weighted avg": {
+          "precision": 0.9970592105263159,
+          "recall": 0.997,
+          "f1-score": 0.9969811155796469,
+          "support": 1000.0
+        }
+      }
+    },
+    "DecisionTree": {
+      "accuracy": 0.997,
+      "report": {
+        "0": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 783.0
+        },
+        "1": {
+          "precision": 0.9802631578947368,
+          "recall": 1.0,
+          "f1-score": 0.9900332225913622,
+          "support": 149.0
+        },
+        "2": {
+          "precision": 1.0,
+          "recall": 0.9558823529411765,
+          "f1-score": 0.9774436090225563,
+          "support": 68.0
+        },
+        "accuracy": 0.997,
+        "macro avg": {
+          "precision": 0.9934210526315789,
+          "recall": 0.9852941176470589,
+          "f1-score": 0.9891589438713062,
+          "support": 1000.0
+        },
+        "weighted avg": {
+          "precision": 0.9970592105263159,
+          "recall": 0.997,
+          "f1-score": 0.9969811155796469,
+          "support": 1000.0
+        }
+      }
+    },
+    "NaiveBayes": {
+      "accuracy": 0.818,
+      "report": {
+        "0": {
+          "precision": 1.0,
+          "recall": 0.876117496807152,
+          "f1-score": 0.9339686861810755,
+          "support": 783.0
+        },
+        "1": {
+          "precision": 0.39751552795031053,
+          "recall": 0.42953020134228187,
+          "f1-score": 0.4129032258064516,
+          "support": 149.0
+        },
+        "2": {
+          "precision": 0.4444444444444444,
+          "recall": 1.0,
+          "f1-score": 0.6153846153846154,
+          "support": 68.0
+        },
+        "accuracy": 0.818,
+        "macro avg": {
+          "precision": 0.6139866574649183,
+          "recall": 0.7685492327164779,
+          "f1-score": 0.6540855091240475,
+          "support": 1000.0
+        },
+        "weighted avg": {
+          "precision": 0.8724520358868184,
+          "recall": 0.818,
+          "f1-score": 0.8346662157710972,
+          "support": 1000.0
+        }
+      }
+    }
+  },
+  "feature_cols": [
+    "hour",
+    "day_of_week",
+    "vehicle_count",
+    "weather",
+    "is_holiday",
+    "temperature",
+    "density_pct",
+    "hour_sin",
+    "hour_cos",
+    "dow_sin",
+    "dow_cos",
+    "is_peak",
+    "is_weekend"
+  ]
+}
