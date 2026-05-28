@@ -1,1 +1,10 @@
 .kilo/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Frontend (root level cache)
+.next/
+.out/

@@ -1,8 +1,9 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { CalendarDays, BarChart3, TrendingUp, Clock } from "lucide-react"
+import { CalendarDays, BarChart3, TrendingUp, Clock, RefreshCw } from "lucide-react"
 import { MainLayout } from "@/components/layout/main-layout"
 import {
   BarChart,
@@ -18,36 +19,56 @@ import {
   Pie,
   Cell,
 } from "recharts"
+import { getAnalytics } from "@/api/trafficApi"
 
-const hourlyData = [
-  { hour: "6 AM", volume: 120 },
-  { hour: "8 AM", volume: 450 },
-  { hour: "10 AM", volume: 280 },
-  { hour: "12 PM", volume: 320 },
-  { hour: "2 PM", volume: 380 },
-  { hour: "4 PM", volume: 490 },
-  { hour: "6 PM", volume: 520 },
-  { hour: "8 PM", volume: 280 },
-  { hour: "10 PM", volume: 150 },
-]
-
-const weeklyData = [
-  { day: "Mon", volume: 12540 },
-  { day: "Tue", volume: 13200 },
-  { day: "Wed", volume: 11890 },
-  { day: "Thu", volume: 14100 },
-  { day: "Fri", volume: 15670 },
-  { day: "Sat", volume: 9800 },
-  { day: "Sun", volume: 8200 },
-]
-
-const congestionDistribution = [
-  { name: "Low", value: 35, color: "var(--primary)" },
-  { name: "Medium", value: 45, color: "var(--warning, oklch(0.75 0.15 60))" },
-  { name: "High", value: 20, color: "var(--destructive)" },
-]
+interface AnalyticsData {
+  status: string
+  timestamp: string
+  metrics: {
+    peak_hour: string
+    avg_daily_volume: number
+    trend_percent: number
+    data_range_days: number
+  }
+  hourly_data: Array<{ hour: string; volume: number }>
+  weekly_data: Array<{ day: string; volume: number }>
+  congestion_distribution: Array<{ name: string; value: number; color: string }>
+  insights: Array<{ title: string; description: string }>
+}
 
 export default function AnalyticsPage() {
+  const [data, setData] = useState<AnalyticsData | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      try {
+        const analytics = await getAnalytics(30)
+        setData(analytics)
+      } catch (error) {
+        console.error("Failed to fetch analytics:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+    const interval = setInterval(fetchData, 30000)
+    return () => clearInterval(interval)
+  }, [])
+
+  if (loading || !data) {
+    return (
+      <MainLayout title="Analytics" description="Historical traffic patterns and insights">
+        <div className="flex items-center justify-center h-64">
+          <RefreshCw className="h-6 w-6 animate-spin" />
+        </div>
+      </MainLayout>
+    )
+  }
+
+  const { metrics, hourly_data, weekly_data, congestion_distribution, insights } = data
+
   return (
     <MainLayout title="Analytics" description="Historical traffic patterns and insights">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -57,7 +78,7 @@ export default function AnalyticsPage() {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">8:00 AM</div>
+            <div className="text-2xl font-bold">{metrics.peak_hour}</div>
             <p className="text-xs text-muted-foreground">Highest traffic volume</p>
           </CardContent>
         </Card>
@@ -68,7 +89,7 @@ export default function AnalyticsPage() {
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12,540</div>
+            <div className="text-2xl font-bold">{metrics.avg_daily_volume.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">Vehicles per day</p>
           </CardContent>
         </Card>
@@ -79,8 +100,8 @@ export default function AnalyticsPage() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+8.2%</div>
-            <p className="text-xs text-muted-foreground">From last week</p>
+            <div className="text-2xl font-bold">{metrics.trend_percent > 0 ? "+" : ""}{metrics.trend_percent}%</div>
+            <p className="text-xs text-muted-foreground">From historical baseline</p>
           </CardContent>
         </Card>
 
@@ -90,7 +111,7 @@ export default function AnalyticsPage() {
             <CalendarDays className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">30 days</div>
+            <div className="text-2xl font-bold">{metrics.data_range_days} days</div>
             <Badge variant="outline" className="mt-1">
               Analysis period
             </Badge>
@@ -106,7 +127,7 @@ export default function AnalyticsPage() {
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%" minWidth={200} minHeight={200} aspect={undefined}>
-                <BarChart data={hourlyData}>
+                <BarChart data={hourly_data}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                   <XAxis dataKey="hour" className="text-xs" />
                   <YAxis className="text-xs" />
@@ -131,7 +152,7 @@ export default function AnalyticsPage() {
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%" minWidth={200} minHeight={200} aspect={undefined}>
-                <LineChart data={weeklyData}>
+                <LineChart data={weekly_data}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                   <XAxis dataKey="day" className="text-xs" />
                   <YAxis className="text-xs" />
@@ -167,7 +188,7 @@ export default function AnalyticsPage() {
               <ResponsiveContainer width="100%" height="100%" minWidth={200} minHeight={200} aspect={undefined}>
                 <PieChart>
                   <Pie
-                    data={congestionDistribution}
+                    data={congestion_distribution}
                     cx="50%"
                     cy="50%"
                     innerRadius={60}
@@ -175,7 +196,7 @@ export default function AnalyticsPage() {
                     paddingAngle={5}
                     dataKey="value"
                   >
-                    {congestionDistribution.map((entry, index) => (
+                    {congestion_distribution.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
@@ -184,7 +205,7 @@ export default function AnalyticsPage() {
               </ResponsiveContainer>
             </div>
             <div className="mt-4 flex justify-center gap-6">
-              {congestionDistribution.map((item) => (
+              {congestion_distribution.map((item) => (
                 <div key={item.name} className="flex items-center gap-2">
                   <div className="h-3 w-3 rounded-full" style={{ backgroundColor: item.color }} />
                   <span className="text-sm">
@@ -201,24 +222,14 @@ export default function AnalyticsPage() {
             <CardTitle>Key Insights</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <p className="text-sm font-medium">Peak Traffic Hours</p>
-              <p className="text-sm text-muted-foreground">
-                Rush hours (7-9 AM & 5-7 PM) show 3x normal traffic volume
-              </p>
-            </div>
-            <div className="space-y-2">
-              <p className="text-sm font-medium">Congestion Hotspots</p>
-              <p className="text-sm text-muted-foreground">
-                3 intersections consistently show high congestion during peak hours
-              </p>
-            </div>
-            <div className="space-y-2">
-              <p className="text-sm font-medium">Improvement Suggestions</p>
-              <p className="text-sm text-muted-foreground">
-                Adjusting signal timing could reduce wait times by up to 15%
-              </p>
-            </div>
+            {insights.map((insight, idx) => (
+              <div key={idx} className="space-y-2">
+                <p className="text-sm font-medium">{insight.title}</p>
+                <p className="text-sm text-muted-foreground">
+                  {insight.description}
+                </p>
+              </div>
+            ))}
           </CardContent>
         </Card>
       </div>

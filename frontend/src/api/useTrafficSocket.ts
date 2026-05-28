@@ -21,6 +21,29 @@ interface TrafficUpdate {
   is_peak: boolean
 }
 
+// WebSocket close code to human-readable reason mapping
+const closeCodeReason = (code: number): string => {
+  const reasons: Record<number, string> = {
+    1000: "Normal closure",
+    1001: "Going away",
+    1002: "Protocol error",
+    1003: "Unsupported data",
+    1005: "No status received",
+    1006: "Abnormal closure (common for network errors)",
+    1011: "Internal error",
+    1015: "TLS handshake failure",
+  }
+  return reasons[code] || "Unknown"
+}
+
+// WebSocket ready state mapping
+const readyStateMap: Record<number, string> = {
+  0: "CONNECTING",
+  1: "OPEN",
+  2: "CLOSING",
+  3: "CLOSED",
+}
+
 export function useTrafficSocket() {
   const [trafficData, setTrafficData] = useState<TrafficUpdate | null>(null)
   const [isConnected, setIsConnected] = useState(false)
@@ -34,6 +57,7 @@ export function useTrafficSocket() {
   const connect = useCallback(() => {
     if (ws.current?.readyState === WebSocket.OPEN) return
 
+    console.log("[WS] Attempting connection to:", WS_URL)
     ws.current = new WebSocket(WS_URL)
 
     ws.current.onopen = () => {
@@ -62,8 +86,8 @@ export function useTrafficSocket() {
               id: i.id,
               name: i.name,
               location: {
-                lat: i.lat ?? 14.8527,
-                lng: i.lng ?? 120.8114,
+                lat: i.lat ?? 14.5587,
+                lng: i.lng ?? 121.0234,
               },
               density: i.density / 100,
               vehicleCount: i.vehicle_count ?? Math.round(i.density * 4),
@@ -133,14 +157,24 @@ export function useTrafficSocket() {
       }
     }
 
-    ws.current.onclose = () => {
+    ws.current.onclose = (event) => {
       setIsConnected(false)
-      console.log("[WS] Disconnected — retrying in 3s")
+      const reason = event.reason || closeCodeReason(event.code)
+      console.log(`[WS] Disconnected (${event.code}: ${reason}) — retrying in 3s`)
       reconnectTimer.current = setTimeout(() => connectRef.current?.(), 3000)
     }
 
-    ws.current.onerror = (err) => {
-      console.error("[WS] Error:", err)
+    ws.current.onerror = (event: Event) => {
+      // WebSocket onerror receives a generic Event, not an Error object.
+      // This typically means the server is unreachable or refused connection.
+      const state = ws.current?.readyState ?? -1
+      const stateDesc = readyStateMap[state] ?? "UNKNOWN"
+      
+      console.error("[WS] Connection error - backend may be offline")
+      console.error(`[WS] URL: ${WS_URL}`)
+      console.error(`[WS] ReadyState: ${state} (${stateDesc})`)
+      console.error("[WS] Ensure backend is running: cd backend && uvicorn app.main:app --host 0.0.0.0 --port 8000")
+      
       ws.current?.close()
     }
   }, [setIntersections, updateTrafficMetrics, addTrafficData, setEmergency])

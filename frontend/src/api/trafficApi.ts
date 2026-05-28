@@ -65,4 +65,9 @@ export async function getBayesianEstimate(evidence: Record<string, boolean>) {
     body: JSON.stringify(evidence),
   })
   return res.json()
+}
+
+export async function getAnalytics(days: number = 7) {
+  const res = await fetch(`${API_BASE}/api/analytics?days=${days}`)
+  return res.json()
 } 

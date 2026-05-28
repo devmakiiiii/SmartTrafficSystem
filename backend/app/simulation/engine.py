@@ -149,12 +149,12 @@ def run_simulation(duration: int = SIMULATION_DURATION,
     env = simpy.Environment()
 
     intersections = [
-        IntersectionSimulator(env, "I1", "Main & 1st",  green_duration=30),
-        IntersectionSimulator(env, "I2", "Main & 2nd",  green_duration=30),
-        IntersectionSimulator(env, "I3", "Main & 3rd",  green_duration=30),
-        IntersectionSimulator(env, "I4", "Park & 1st",  green_duration=30),
-        IntersectionSimulator(env, "I5", "Park & 2nd",  green_duration=30),
-        IntersectionSimulator(env, "I6", "Park & 3rd",  green_duration=30),
+        IntersectionSimulator(env, "I1", "EDSA & Roxas Boulevard",  green_duration=30),
+        IntersectionSimulator(env, "I2", "EDSA & Ayala Avenue",     green_duration=30),
+        IntersectionSimulator(env, "I3", "EDSA & Boni Avenue",      green_duration=30),
+        IntersectionSimulator(env, "I4", "EDSA & Magsaysay Blvd",   green_duration=30),
+        IntersectionSimulator(env, "I5", "EDSA & Quezon Avenue",    green_duration=30),
+        IntersectionSimulator(env, "I6", "EDSA & Ortigas Avenue",   green_duration=30),
     ]
 
     env.process(_vehicle_generator(env, intersections, VEHICLE_ARRIVAL_RATE))

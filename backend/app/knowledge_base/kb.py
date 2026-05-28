@@ -178,14 +178,15 @@ class KnowledgeBase:
         ]:
             self.vehicles[v.type] = v
 
-        # City intersections (5-node grid)
+        # City intersections (Manila EDSA corridor - real intersections)
         intersections = [
-            IntersectionFrame("I1", "Main & 1st",    14.8601, 120.9800, connected_to=["I2","I4"]),
-            IntersectionFrame("I2", "Main & 2nd",    14.8610, 120.9820, connected_to=["I1","I3","I5"]),
-            IntersectionFrame("I3", "Main & 3rd",    14.8620, 120.9840, connected_to=["I2","I6"]),
-            IntersectionFrame("I4", "Park & 1st",    14.8580, 120.9800, connected_to=["I1","I5"]),
-            IntersectionFrame("I5", "Park & 2nd",    14.8590, 120.9820, connected_to=["I2","I4","I6"]),
-            IntersectionFrame("I6", "Park & 3rd",    14.8600, 120.9840, connected_to=["I3","I5"]),
+            # Manila EDSA corridor (major business district)
+            IntersectionFrame("I1", "EDSA & Roxas Boulevard",    14.5587, 121.0234, connected_to=["I2","I4"]),
+            IntersectionFrame("I2", "EDSA & Ayala Avenue",       14.5551, 121.0244, connected_to=["I1","I3","I5"]),
+            IntersectionFrame("I3", "EDSA & Boni Avenue",        14.5765, 121.0356, connected_to=["I2","I6"]),
+            IntersectionFrame("I4", "EDSA & Magsaysay Boulevard",14.6178, 121.0359, connected_to=["I1","I5"]),
+            IntersectionFrame("I5", "EDSA & Quezon Avenue",      14.6300, 121.0300, connected_to=["I2","I4","I6"]),
+            IntersectionFrame("I6", "EDSA & Ortigas Avenue",     14.5833, 121.0589, connected_to=["I3","I5"]),
         ]
         for i in intersections:
             self.intersections[i.id] = i
