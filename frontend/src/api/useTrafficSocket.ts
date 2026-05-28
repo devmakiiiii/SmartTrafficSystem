@@ -164,7 +164,7 @@ export function useTrafficSocket() {
       reconnectTimer.current = setTimeout(() => connectRef.current?.(), 3000)
     }
 
-    ws.current.onerror = (event: Event) => {
+    ws.current.onerror = () => {
       // WebSocket onerror receives a generic Event, not an Error object.
       // This typically means the server is unreachable or refused connection.
       const state = ws.current?.readyState ?? -1
