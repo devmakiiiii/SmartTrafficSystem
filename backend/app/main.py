@@ -21,12 +21,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 # ── Internal modules ──────────────────────────────────────────
+
 from app.knowledge_base.kb import kb
 from app.inference.engine import engine
 from app.routing.search import router as traffic_router
 from app.services.bayesian import bayes_engine, fuzzy_classifier
 from app.machine_learning.predictor import predict_congestion, get_metrics, train_models
 from app.simulation.engine import run_simulation
+from app.services.traffic_api import fetch_real_traffic, enhance_with_traffic
+from app.services.analytics import compute_analytics
 
 
 # ─────────────────────────────────────────────────────────────
@@ -122,7 +125,7 @@ async def broadcast_traffic_loop():
         await asyncio.sleep(3)
         if not ws_manager.active:
             continue
-        payload = _generate_live_snapshot()
+        payload = await _generate_live_snapshot()
         await ws_manager.broadcast(payload)
 
 
@@ -173,7 +176,7 @@ def _ml_density(hour: int, day_of_week: int, weather: int,
     return round(float(max(0.0, min(100.0, density))), 1), vehicle_count
 
 
-def _generate_live_snapshot() -> dict:
+async def _generate_live_snapshot() -> dict:
     now         = datetime.now()
     hour        = now.hour
     day_of_week = now.weekday()          # 0=Mon … 6=Sun
@@ -184,6 +187,9 @@ def _generate_live_snapshot() -> dict:
     # Pick a random weather condition weighted realistically
     weather_code = random.choices([0, 1, 2, 3], weights=[70, 15, 10, 5])[0]
     weather_str  = _WEATHER_STR[weather_code]
+
+    # Try to fetch real traffic data
+    real_traffic = await fetch_real_traffic()
 
     intersections = []
     for iid, inter in kb.intersections.items():
@@ -199,6 +205,16 @@ def _generate_live_snapshot() -> dict:
             density, vehicle_count = _ml_density(
                 hour, day_of_week, weather_code, is_holiday, temperature
             )
+            
+            # ── Enhance with real traffic data if available ──
+            if real_traffic:
+                for rt in real_traffic:
+                    lat_diff = abs(rt["location"]["lat"] - inter.latitude)
+                    lng_diff = abs(rt["location"]["lng"] - inter.longitude)
+                    if lat_diff < 0.01 and lng_diff < 0.01:
+                        density = rt["density"]
+                        break
+            
             kb.update_density(iid, density)
 
             if density > 70:
@@ -499,6 +515,16 @@ def ml_metrics():
     return get_metrics()
 
 
+@app.get("/api/analytics")
+def get_analytics(days: int = 7):
+    """
+    GET /api/analytics
+    Returns historical traffic analytics with hourly patterns, weekly trends,
+    and congestion distribution computed from real data.
+    """
+    return compute_analytics(days=days)
+
+
 @app.post("/api/ml/train")
 def retrain():
     """POST /api/ml/train – retrain the ML model (use after updating dataset)."""
@@ -520,7 +546,7 @@ async def traffic_ws(websocket: WebSocket):
     await ws_manager.connect(websocket)
     try:
         # Send initial snapshot immediately on connect
-        await websocket.send_json(_generate_live_snapshot())
+        await websocket.send_json(await _generate_live_snapshot())
         while True:
             data = await websocket.receive_json()
             if data.get("type") == "emergency":
