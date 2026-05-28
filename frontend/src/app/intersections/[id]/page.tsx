@@ -19,6 +19,7 @@ import {
   Siren,
 } from "lucide-react"
 import { MainLayout } from "@/components/layout/main-layout"
+import { IntersectionVisual } from "@/components/traffic/intersection-visual"
 import { useTrafficStore } from "@/lib/stores/traffic-store"
 import { optimizeSignal, activateEmergency, getRoute } from "@/api/trafficApi"
 import { cn } from "@/lib/utils"
@@ -269,6 +270,11 @@ export default function IntersectionDetailPage() {
             {emergencyDone ? "Emergency Activated!" : "Activate Emergency"}
           </Button>
         </div>
+      </div>
+
+      {/* Visual Intersection */}
+      <div className="mb-6 flex justify-center">
+        <IntersectionVisual intersection={intersection} />
       </div>
 
       {/* Emergency banner */}

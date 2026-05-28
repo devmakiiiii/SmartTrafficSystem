@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils"
 import { useTrafficStore } from "@/lib/stores/traffic-store"
 import { AlertTriangle, Search, Grid3X3, Map } from "lucide-react"
 import { MainLayout } from "@/components/layout/main-layout"
+import { IntersectionVisual } from "@/components/traffic/intersection-visual"
 import { useState } from "react"
 
 export default function IntersectionsPage() {
@@ -105,22 +106,27 @@ export default function IntersectionsPage() {
                 </Badge>
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Vehicles</span>
-                  <span className="font-medium">{intersection.vehicleCount}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Density</span>
-                  <span className="font-medium">{Math.round(intersection.density * 100)}%</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Location</span>
-                  <span className="font-medium text-xs">
-                    {intersection.location.lat.toFixed(4)}, {intersection.location.lng.toFixed(4)}
-                  </span>
-                </div>
+<CardContent>
+               <div className="space-y-3">
+                 {/* Mini visual preview */}
+                 <div className="flex justify-center">
+                   <IntersectionVisual intersection={intersection} size={120} />
+                 </div>
+
+                 <div className="flex items-center justify-between">
+                   <span className="text-muted-foreground">Vehicles</span>
+                   <span className="font-medium">{intersection.vehicleCount}</span>
+                 </div>
+                 <div className="flex items-center justify-between">
+                   <span className="text-muted-foreground">Density</span>
+                   <span className="font-medium">{Math.round(intersection.density * 100)}%</span>
+                 </div>
+                 <div className="flex items-center justify-between">
+                   <span className="text-muted-foreground">Location</span>
+                   <span className="font-medium text-xs">
+                     {intersection.location.lat.toFixed(4)}, {intersection.location.lng.toFixed(4)}
+                   </span>
+                 </div>
 
                 {intersection.status !== "operational" && (
                   <div className="flex items-center gap-2 rounded-md bg-yellow-500/10 p-2 text-sm text-yellow-600 dark:bg-yellow-500/20 dark:text-yellow-400">

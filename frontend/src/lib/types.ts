@@ -8,6 +8,7 @@ export interface Intersection {
   vehicleCount: number
   density: number
   signalTiming: { north: number; south: number; east: number; west: number }
+  emergencyActive: boolean
 }
 
 export interface TrafficData {

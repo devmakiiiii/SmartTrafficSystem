@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useTrafficStore } from "@/lib/stores/traffic-store"
-import type { Intersection } from "@/lib/types"
+import type { Intersection } from "@/lib/stores/traffic-store"
 
 export function IntersectionCard({ intersection }: { intersection: Intersection }) {
   const { setSelectedIntersection } = useTrafficStore()

@@ -118,6 +118,74 @@ class ConnectionManager:
 
 ws_manager = ConnectionManager()
 
+# Signal state manager: tracks each intersection's signal cycle
+class SignalStateManager:
+    def __init__(self):
+        self.cycle_start_time = {}
+        self.current_phase = {}
+        self.phase_remaining = {}
+        
+    def update_signal(self, intersection_id: str, density: float) -> tuple:
+        now = datetime.now()
+        inter = kb.get_intersection(intersection_id)
+        if not inter:
+            return "green", 30, 0
+            
+        if intersection_id not in self.current_phase:
+            self.current_phase[intersection_id] = inter.signal_phase or "green"
+            self.cycle_start_time[intersection_id] = now
+            self.phase_remaining[intersection_id] = 0
+
+        # Emergency mode: hold green continuously
+        if inter.is_emergency_active:
+            inter.signal_phase = "green"
+            green_base = 60
+            return "green", green_base, green_base
+
+        start_time = self.cycle_start_time[intersection_id]
+        elapsed = (now - start_time).total_seconds()
+        cycle_state = self.current_phase[intersection_id]
+        
+        green_base = 60 if density > 75 else (30 if density > 40 else 20)
+        yellow_duration = 3
+        red_base = green_base
+        
+        if cycle_state == "green":
+            if elapsed >= green_base:
+                self.current_phase[intersection_id] = "yellow"
+                self.cycle_start_time[intersection_id] = now
+                phase = "yellow"
+                remaining = yellow_duration
+            else:
+                remaining = max(0, int(green_base - elapsed))
+                phase = "green"
+        elif cycle_state == "yellow":
+            if elapsed >= yellow_duration:
+                self.current_phase[intersection_id] = "red"
+                self.cycle_start_time[intersection_id] = now
+                phase = "red"
+                remaining = red_base
+            else:
+                remaining = max(0, int(yellow_duration - elapsed))
+                phase = "yellow"
+        else:
+            if elapsed >= red_base:
+                self.current_phase[intersection_id] = "green"
+                self.cycle_start_time[intersection_id] = now
+                phase = "green"
+                remaining = green_base
+            else:
+                remaining = max(0, int(red_base - elapsed))
+                phase = "red"
+                
+        kb.intersections[intersection_id].signal_phase = phase
+        kb.intersections[intersection_id].phase_remaining = remaining
+        self.phase_remaining[intersection_id] = remaining
+        
+        return phase, green_base, remaining
+
+signal_state = SignalStateManager()
+
 
 # Background task: push live traffic data every 3 seconds
 async def broadcast_traffic_loop():
@@ -198,8 +266,6 @@ async def _generate_live_snapshot() -> dict:
         if inter.is_emergency_active:
             density      = inter.current_density or 60.0
             vehicle_count = int(density * 4)
-            status        = "error"
-            phase         = "green"
         else:
             # ── ML-informed density ──────────────────────────────────────
             density, vehicle_count = _ml_density(
@@ -217,15 +283,17 @@ async def _generate_live_snapshot() -> dict:
             
             kb.update_density(iid, density)
 
-            if density > 70:
-                status = "error"
-                phase  = "green"
-            elif density > 45:
-                status = "warning"
-                phase  = "green"
-            else:
-                status = "operational"
-                phase  = "red"
+        # ── Get current signal phase with proper cycling ──
+        phase, green, phase_remaining = signal_state.update_signal(iid, density)
+        
+        if inter.is_emergency_active:
+            status = "error"
+        elif density > 75:
+            status = "error"
+        elif density > 45:
+            status = "warning"
+        else:
+            status = "operational"
 
         result = engine.evaluate_traffic(
             density,
@@ -237,14 +305,16 @@ async def _generate_live_snapshot() -> dict:
         intersections.append({
             "id":           iid,
             "name":         inter.name,
-            "density":      round(density, 1),      # 0–100; frontend normalises to 0–1
+            "density":      round(density, 1),
             "phase":        phase,
+            "green_duration": green,
+            "phase_remaining": phase_remaining,
             "action":       result.actions[0] if result.actions else "normal",
             "vehicle_count": vehicle_count,
             "status":       status,
             "lat":          inter.latitude,
             "lng":          inter.longitude,
-            "is_emergency": inter.is_emergency_active,   # ✅ frontend reads this
+            "is_emergency": inter.is_emergency_active,
             "weather":      weather_str,
         })
 

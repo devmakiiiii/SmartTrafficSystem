@@ -30,10 +30,12 @@ class IntersectionFrame:
     longitude: float
     num_lanes: int = 2
     has_sensors: bool = True
-    connected_to: List[str] = field(default_factory=list)   # adjacent intersection IDs
-    current_density: float = 0.0        # 0–100 %
-    signal_phase: str = "green"         # green | yellow | red
-    green_duration: int = 30            # seconds
+    connected_to: List[str] = field(default_factory=list)
+    current_density: float = 0.0
+    signal_phase: str = "green"
+    green_duration: int = 30
+    red_duration: int = 30
+    phase_remaining: int = 0
     is_emergency_active: bool = False
 
 
